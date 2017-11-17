@@ -15,6 +15,7 @@ import java.util.Vector;
 
 public class Main {
     static void draw(Vector<Integer[]> lines, Graphics graphics) {
+        graphics.setColor(Color.BLACK);
         for (Integer[] data : lines) {
             graphics.drawLine(data[0], data[1], data[2], data[3]);
         }
@@ -121,7 +122,7 @@ public class Main {
 
         draw(draw_steps, g2);
 
-
+        System.out.println("Saving file...");
         save(off_Image, "javieric_"+order+"_"+base);
     }
 }
