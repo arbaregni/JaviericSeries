@@ -64,52 +64,58 @@ public class Main {
         }
 
         Vector<Integer[]> draw_steps = new Vector<>(); // vector of arrays {x1, y1, x2, y2}. used to draw a line from (x1, y1) to (x2, y2)
-
-      
+        Vector<Integer> toCheck  = new Vector<>(); // things that aren't connected that may yet be
+        Vector<Integer> newChecks;
 
         for (int j = 0; j < Math.pow(base, order); j++) {
             System.out.println("                     " + last_row);
 	        System.out.println("Currently analyzing: " + current_row + " ("+j+")");
 
+	        newChecks = new Vector<>();
+	        int beginSeg = 0;
 	        int upConnectsInThisSegment = 0; // how many times does this new row connect up to the last? used for calculating diagonals
 
 	        for (int k = 0; k < order; k++) {
                 int u = current_row.get(k);
-                System.out.println("k = " + k + " u = " + u + " upConnectsInThisSegment = " + upConnectsInThisSegment);
+
+                if (k != 0 && current_row.get(k - 1) != u) { // new segment
+                    upConnectsInThisSegment = 0; // if we break the segment, we must reset the counters
+                    beginSeg = k;
+                }
 
                 // connect across
                 if (k + 1 < order && current_row.get(k+1) == u) {
                     // connect to the right
                     draw_steps.add(new Integer[]{k * col_width, j * row_height, (k + 1) * col_width, j * row_height});
-                    System.out.println("S");
-                }
-
-                if (k != 0 && current_row.get(k - 1) != u) {
-                    upConnectsInThisSegment = 0; // if we break the segment, we must reset the counters
                 }
 
                 // connect up, either straight or diagonal
                 if (k < last_row.size() && last_row.get(k).equals(u)) {
                     // connect straight up
                     draw_steps.add(new Integer[]{k * col_width, j * row_height, k * col_width, (j - 1) * row_height});
-                    System.out.println("U");
                     upConnectsInThisSegment++;
-                } else if (upConnectsInThisSegment == 0) {
-                    if (k - 1 < last_row.size() && k != 0 && last_row.get(k - 1).equals(u)) {
-                        // connect diagonally to the left
-                        draw_steps.add(new Integer[]{k * col_width, j * row_height, (k - 1) * col_width, (j - 1) * row_height});
-                        upConnectsInThisSegment++;
-                        System.out.println("UL");
-                    } else if (k + 1 < last_row.size() && last_row.get(k + 1).equals(u)) {
-                        // connect diagonally to the right
-                        draw_steps.add(new Integer[]{k * col_width, j * row_height, (k + 1) * col_width, (j - 1) * row_height});
-                        upConnectsInThisSegment++;
-                        System.out.println("UR");
-                    }
+
+                } else if (k - 1 < last_row.size() && k != 0 && last_row.get(k - 1).equals(u) && (upConnectsInThisSegment == 0 || toCheck.contains(k - 1))) {
+                    // connect diagonally to the left
+                    draw_steps.add(new Integer[]{k * col_width, j * row_height, (k - 1) * col_width, (j - 1) * row_height});
+                    upConnectsInThisSegment++;
+                } else if (k + 1 < last_row.size() && last_row.get(k + 1).equals(u) && (upConnectsInThisSegment == 0 || toCheck.contains(k + 1))) {
+                    // connect diagonally to the right
+                    draw_steps.add(new Integer[]{k * col_width, j * row_height, (k + 1) * col_width, (j - 1) * row_height});
+                    upConnectsInThisSegment++;
                 }
+
+                if (upConnectsInThisSegment == 0) {
+                    newChecks.add(beginSeg);
+                    System.out.println(beginSeg);
+                }
+
             }
 	        last_row = current_row;
 	        current_row = nextRow(current_row, base);
+
+	        toCheck = newChecks;
+            System.out.println("                     "+toCheck);
         }
 
         System.out.println("Analysis complete, proceeding to draw...");
