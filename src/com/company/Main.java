@@ -12,6 +12,7 @@ import java.util.Vector;
 
 
 public class Main {
+    static ProgressTracker ticker;
 
     static void drawLines(Vector<Integer[]> lines, Graphics graphics, int colWidth, int rowHeight) {
         graphics.setColor(Color.BLACK);
@@ -69,34 +70,35 @@ public class Main {
         Node.origins = origins;
         Node.rootNodes = rootNodes;
 
+
         // establish non-diagonals:
         for (int j = 0; j < rows.size(); j++) {
             Vector<Node> line = rows.get(j);
             for (int k = 0; k < line.size(); k++) {
+                ticker.tick();
+
                 Node node = line.get(k);
                 int u = node.u;
-                origins.put(node, node); // we will edit this later
+                origins.put(node, node); // place holder value. It will survive if it is superior to all its connections
 
-                System.out.println(node);
 
                 if (k != 0 && line.get(k - 1).u == u) {
                     drawSteps.add(new Integer[]{k, j, k - 1, j});
                     node.updateOrigins(line.get(k - 1));
-                    System.out.println(" LEFT");
                 }
                 if (j != 0 && rows.get(j - 1).get(k).u == u) {
                     drawSteps.add(new Integer[]{k, j, k, j - 1});
                     node.updateOrigins(rows.get(j - 1).get(k));
-                    System.out.println(" UP");
                 }
             }
         }
 
-        System.out.println(origins);
 
         // do the diagonals
         for (int j = 0; j < rows.size(); j++) {
             for (int k = 0; k < rows.get(j).size(); k++) {
+                ticker.tick();
+
                 Node node = rows.get(j).get(k);
                 if (k != 0 && j != 0) {
                     Node upperLeft = rows.get(j - 1).get(k - 1);
@@ -126,27 +128,33 @@ public class Main {
 	    Scanner scan = new Scanner(System.in);
         System.out.println("What is the order of the javieric series? ");
 	    int order = scan.nextInt();
-	    int base = 2;
+	    System.out.println("What is the base?");
+	    int base = scan.nextInt();
 	    int row_height = 10;
 	    int col_width = 10;
+	    int pic_width = col_width * order;
+	    int pic_height = row_height * (int) Math.pow(base, order);
 
 	    Vector<Vector<Node>> rows = constructNumerical(order, base);
+
+	    ticker = new ProgressTracker(2 * (int) Math.pow(base, order) * order, "Analyzing file: ");
 
         Vector<Integer[]> draw_steps = constructDrawSteps(rows);
 
         System.out.println("Analysis complete, proceeding to draw...");
 
         BufferedImage off_Image =
-                new BufferedImage(col_width * order, (int) (row_height * Math.pow(base, order)),
+                new BufferedImage(pic_width, pic_height,
                         BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g2 = off_Image.createGraphics();
 
         drawLines(draw_steps, g2, col_width, row_height);
 
-        System.out.println("Saving file...");
+        String filename = "javieric_"+order+"_"+base+"_"+pic_width+"x"+pic_height;
+        System.out.println("Saving file as "+filename);
 
-        save(off_Image, "javieric_"+order+"_"+base);
+        save(off_Image, filename);
 
         System.out.println("all done");
     }
