@@ -1,25 +1,32 @@
 package com.company;
 
-import java.util.HashMap;
 import java.util.Vector;
 
 public class Node {
-    public static Vector<Vector<Node>> rows;
-    public static HashMap<Node, Node> origins;
-    public static Vector<Node> rootNodes;
 
     public int j, k, u, connections;
+    public Node origin;
+    public Vector<Node> children;
 
     Node(int j, int k, int u) {
         this.j = j;
         this.k = k;
         this.u = u;
         connections = 0;
+        children = new Vector<>();
+        origin = this;
     }
 
+
+
+
+
+
+    @Override
     public String toString() {
         return "(" + j + ", " + k + ") : " + u;
     }
+
     /**
      * this Node is superior to the other if:
      *  1. they have the same type
@@ -35,38 +42,27 @@ public class Node {
     public void updateOrigins(Node other) {
         connections++;
         other.connections++;
-        Node old, updated;
         if (this.isSuperior(other)) {
-            old = origins.get(other);
-            updated = origins.get(this);
+            this.origin.addAsChild(other.origin);
         } else {
-            old = origins.get(this);
-            updated = origins.get(other);
-        }
-        for (Node key : origins.keySet()) {
-            if (origins.get(key) == old) {
-                origins.replace(key, updated);
-            }
+            other.origin.addAsChild(this.origin);
         }
     }
 
     public boolean isConnectedTo(Node other) {
-        if (origins.containsKey(other)) {
-            if (origins.containsKey(this)) {
-                // both are not root
-                return origins.get(other) == origins.get(this);
-            } else {
-                // other is not root, but we are
-                return origins.get(this) == other;
+
+        return other == this || other == this.origin || other.origin == this || other.origin == this.origin;
+    }
+
+    public void addAsChild(Node other) {
+        if (other.origin != this) { // prevent concurrent modification
+            for (Node child : other.origin.children) {
+                child.origin = this;
+                children.add(child);
             }
-        } else {
-            if (origins.containsKey(this)) {
-                // we are root, but other is not
-                return origins.get(other) == this;
-            } else {
-                // neither are root
-                return other == this;
-            }
+            other.children = new Vector<>();
+            children.add(other);
+            other.origin = this;
         }
     }
 }
